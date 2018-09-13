@@ -52,7 +52,7 @@ module.exports = withTypescript(withOffline({
         },
       }
     ],
-    importScripts: ['/sw.js'],
+    importScripts: ['sw.js'],
     clientsClaim: true,
     skipWaiting: true,
   },

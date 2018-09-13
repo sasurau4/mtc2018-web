@@ -30,8 +30,8 @@ i18n
         const server = express()
 
         // service worker
-        server.get('/service-worker.js', (req, res) => app.serveStatic(req, res, path.join(__dirname, '.next', '/service-worker.js')))
-        server.get('/sw.js', (req, res) => app.serveStatic(req, res, path.join(__dirname, '.next', '/sw.js')))
+        server.get('/2018/service-worker.js', (req, res) => app.serveStatic(req, res, path.join(__dirname, '.next', 'service-worker.js')))
+        server.get('/2018/sw.js', (req, res) => app.serveStatic(req, res, path.join(__dirname, '.next', '/sw.js')))
 
         // web app manifest
         server.get('/2018/manifest.json', (req, res) => app.serveStatic(req, res, path.join(__dirname, '.next', 'manifest.json')))
