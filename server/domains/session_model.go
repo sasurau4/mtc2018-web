@@ -95,7 +95,8 @@ func (repo *sessionRepo) Get(ctx context.Context, ids ...int) ([]*Session, error
 		if !ok {
 			return nil, fmt.Errorf("'Session:%d' is not found", id)
 		}
-		resp = append(resp, session)
+		sessionCopy := *session
+		resp = append(resp, &sessionCopy)
 	}
 
 	return resp, nil
