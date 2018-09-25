@@ -23,11 +23,6 @@ func (r *mutationResolver) CreateLike(ctx context.Context, input CreateLikeInput
 	}
 	session := sessionList[0]
 
-	session, err = r.sessionRepo.AddLiked(ctx, session.ID, 1)
-	if err != nil {
-		return nil, err
-	}
-
 	like := r.storer.Add(session.ID, input.UUID)
 
 	return &CreateLikePayload{

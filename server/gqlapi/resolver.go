@@ -4,14 +4,22 @@ package gqlapi
 
 import (
 	"sync"
+	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/mercari/mtc2018-web/server/domains"
 	"go.uber.org/zap"
 )
 
+// ResolverConfig provides configuration for ResolverRoot.
+type ResolverConfig struct {
+	Logger                   *zap.Logger
+	SpannerClient            *spanner.Client
+	SessionLikedCacheExpired time.Duration
+}
+
 // NewResolver returns GraphQL root resolver.
-func NewResolver(logger *zap.Logger, spannerClient *spanner.Client) (ResolverRoot, error) {
+func NewResolver(cfg *ResolverConfig) (ResolverRoot, error) {
 
 	sessionRepo, err := domains.NewSessionRepo()
 	if err != nil {
@@ -31,13 +39,13 @@ func NewResolver(logger *zap.Logger, spannerClient *spanner.Client) (ResolverRoo
 		likeRepo    domains.LikeRepo
 		likeSumRepo domains.LikeSummaryRepo
 	)
-	if spannerClient != nil {
+	if cfg.SpannerClient != nil {
 		var err error
-		likeRepo, err = domains.NewLikeRepo(spannerClient)
+		likeRepo, err = domains.NewLikeRepo(cfg.SpannerClient)
 		if err != nil {
 			return nil, err
 		}
-		likeSumRepo, err = domains.NewLikeSummaryRepo(spannerClient)
+		likeSumRepo, err = domains.NewLikeSummaryRepo(cfg.SpannerClient)
 		if err != nil {
 			return nil, err
 		}
@@ -53,34 +61,39 @@ func NewResolver(logger *zap.Logger, spannerClient *spanner.Client) (ResolverRoo
 		}
 	}
 
-	storer := newStorer(logger, likeRepo, likeSumRepo)
+	storer := newStorer(cfg.Logger, likeRepo, likeSumRepo)
 	go storer.Run()
 
 	eventCh := make(chan likeEvent, 128)
 
-	observer := newObserver(logger, eventCh, likeSumRepo)
+	observer := newObserver(cfg.Logger, eventCh, likeSumRepo)
 	go observer.Run()
 
-	listener := newListener(logger, eventCh, sessionRepo)
+	listener := newListener(cfg.Logger, eventCh, sessionRepo)
 	go listener.Run()
 
 	r := &rootResolver{
+		cfg: cfg,
+
 		sessionRepo: sessionRepo,
 		speakerRepo: speakerRepo,
 		likeRepo:    likeRepo,
 		newsRepo:    newsRepo,
 		likeSumRepo: likeSumRepo,
 
-		Logger:   logger,
+		Logger:   cfg.Logger,
 		storer:   storer,
 		observer: observer,
 		listener: listener,
 	}
+	r.sessionResolver = newSessionResolver(r)
 
 	return r, nil
 }
 
 type rootResolver struct {
+	cfg *ResolverConfig
+
 	sessionRepo domains.SessionRepo
 	speakerRepo domains.SpeakerRepo
 	likeRepo    domains.LikeRepo
@@ -93,6 +106,8 @@ type rootResolver struct {
 	storer   *storer
 	observer *observer
 	listener *listener
+
+	sessionResolver SessionResolver
 }
 
 func (r *rootResolver) Query() QueryResolver {
@@ -108,7 +123,7 @@ func (r *rootResolver) Subscription() SubscriptionResolver {
 }
 
 func (r *rootResolver) Session() SessionResolver {
-	return &sessionResolver{r}
+	return r.sessionResolver
 }
 
 func (r *rootResolver) Speaker() SpeakerResolver {

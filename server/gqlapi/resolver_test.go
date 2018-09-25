@@ -32,7 +32,11 @@ func TestGraphQLEndpoint_ByTestData(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resolver, err := gqlapi.NewResolver(zap.NewNop(), nil)
+	resolver, err := gqlapi.NewResolver(&gqlapi.ResolverConfig{
+		Logger:                   zap.NewNop(),
+		SpannerClient:            nil,
+		SessionLikedCacheExpired: -1,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +157,11 @@ type operationMessage struct {
 }
 
 func TestGraphQLEndpoint_Subscription(t *testing.T) {
-	resolver, err := gqlapi.NewResolver(zap.NewNop(), nil)
+	resolver, err := gqlapi.NewResolver(&gqlapi.ResolverConfig{
+		Logger:                   zap.NewNop(),
+		SpannerClient:            nil,
+		SessionLikedCacheExpired: -1,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +258,7 @@ mutation {
 		if err := c.ReadJSON(&msg); err != nil {
 			t.Fatal(err)
 		}
-		want := `{"data":{"likeAdded":{"session":{"id":"Session:12","liked":0},"likes":1}}}`
+		want := `{"data":{"likeAdded":{"session":{"id":"Session:12","liked":1},"likes":1}}}`
 		if got := string(msg.Payload); want != got {
 			t.Fatalf("want %v, but %v", want, got)
 		}
@@ -262,7 +270,7 @@ mutation {
 		if err := c.ReadJSON(&msg); err != nil {
 			t.Fatal(err)
 		}
-		want = `{"data":{"likeAdded":{"session":{"id":"Session:12","liked":0},"likes":2}}}`
+		want = `{"data":{"likeAdded":{"session":{"id":"Session:12","liked":1},"likes":2}}}`
 		if got := string(msg.Payload); want != got {
 			t.Fatalf("want %v, but %v", want, got)
 		}

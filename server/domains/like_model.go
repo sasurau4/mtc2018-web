@@ -12,6 +12,7 @@ import (
 type LikeRepo interface {
 	Insert(ctx context.Context, like *Like) (*Like, error)
 	BulkInsert(ctx context.Context, like []Like) ([]Like, error)
+	CountBySessionID(ctx context.Context, sessionID int64) (int, error)
 }
 
 // NewFakeLikeRepo returns new LikeRepo.
@@ -45,6 +46,20 @@ func (repo *fakeLikeRepo) BulkInsert(ctx context.Context, likes []Like) ([]Like,
 	return likes, nil
 }
 
+func (repo *fakeLikeRepo) CountBySessionID(ctx context.Context, sessionID int64) (int, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var count int
+	for _, like := range repo.list {
+		if like.SessionID == sessionID {
+			count++
+		}
+	}
+
+	return count, nil
+}
+
 // NewLikeRepo returns new LikeRepo.
 func NewLikeRepo(spannerClient *spanner.Client) (LikeRepo, error) {
 	return &likeRepo{spanner: spannerClient}, nil
@@ -75,4 +90,27 @@ func (repo *likeRepo) BulkInsert(ctx context.Context, likes []Like) ([]Like, err
 		return nil, err
 	}
 	return likes, nil
+}
+
+func (repo *likeRepo) CountBySessionID(ctx context.Context, sessionID int64) (int, error) {
+	stmt := spanner.Statement{
+		SQL: `SELECT COUNT(*) AS CNT FROM Likes WHERE SessionId = @sessionID`,
+		Params: map[string]interface{}{
+			"sessionID": sessionID,
+		},
+	}
+
+	iter := repo.spanner.Single().Query(ctx, stmt)
+	defer iter.Stop()
+
+	row, err := iter.Next()
+	if err != nil {
+		return 0, err
+	}
+
+	var count int
+	if err := row.ColumnByName("CNT", &count); err != nil {
+		return 0, err
+	}
+	return count, nil
 }

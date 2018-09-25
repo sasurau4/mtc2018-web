@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/99designs/gqlgen/handler"
@@ -105,7 +106,11 @@ func runServer(port int, env *config.Env, logger *zap.Logger, spannerClient *spa
 	// GraphQL implementation
 	// playgroundがapiの下にあるの微妙だけどGKEのIngress的にこのほうが楽なのでまぁこれでいいでしょ
 	mux.Handle("/2018/api/playground", handler.Playground("GraphQL playground", "/2018/api/query"))
-	resolver, err := gqlapi.NewResolver(logger, spannerClient)
+	resolver, err := gqlapi.NewResolver(&gqlapi.ResolverConfig{
+		Logger:                   logger,
+		SpannerClient:            spannerClient,
+		SessionLikedCacheExpired: time.Second,
+	})
 	if err != nil {
 		logger.Fatal(err.Error(), zap.Error(err))
 	}

@@ -31,7 +31,6 @@ type SessionRepo interface {
 	Get(ctx context.Context, ids ...int) ([]*Session, error)
 	GetBySpeakerIDs(ctx context.Context, speakerIDs ...string) ([][]*Session, error)
 	List(ctx context.Context, req *SessionListRequest) (*SessionListResp, error)
-	AddLiked(ctx context.Context, id int, delta int) (*Session, error)
 }
 
 // SessionListRequest provides option for SessionRepo#List.
@@ -152,14 +151,4 @@ func (repo *sessionRepo) List(ctx context.Context, req *SessionListRequest) (*Se
 	}
 
 	return resp, nil
-}
-
-func (repo *sessionRepo) AddLiked(ctx context.Context, id int, delta int) (*Session, error) {
-	sessionList, err := repo.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	session := sessionList[0]
-	session.Liked += delta
-	return session, nil
 }
