@@ -239,7 +239,7 @@ mutation {
 		err = c.WriteJSON(&operationMessage{
 			Type:    "start",
 			ID:      "xxx1",
-			Payload: json.RawMessage(`{"query": "subscription { likeAdded(sessionId: 12) { sessionId likes } }"}`),
+			Payload: json.RawMessage(`{"query": "subscription { likeAdded(sessionId: 12) { session { id liked } likes } }"}`),
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -250,7 +250,7 @@ mutation {
 		if err := c.ReadJSON(&msg); err != nil {
 			t.Fatal(err)
 		}
-		want := `{"data":{"likeAdded":{"sessionId":12,"likes":1}}}`
+		want := `{"data":{"likeAdded":{"session":{"id":"Session:12","liked":1},"likes":1}}}`
 		if got := string(msg.Payload); want != got {
 			t.Fatalf("want %v, but %v", want, got)
 		}
@@ -262,7 +262,7 @@ mutation {
 		if err := c.ReadJSON(&msg); err != nil {
 			t.Fatal(err)
 		}
-		want = `{"data":{"likeAdded":{"sessionId":12,"likes":2}}}`
+		want = `{"data":{"likeAdded":{"session":{"id":"Session:12","liked":3},"likes":2}}}`
 		if got := string(msg.Payload); want != got {
 			t.Fatalf("want %v, but %v", want, got)
 		}

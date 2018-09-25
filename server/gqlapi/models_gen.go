@@ -20,8 +20,8 @@ type CreateLikePayload struct {
 }
 
 type LikeEvent struct {
-	SessionID int `json:"sessionId"`
-	Likes     int `json:"likes"`
+	Session domains.Session `json:"session"`
+	Likes   int             `json:"likes"`
 }
 
 type NewsConnection struct {

@@ -56,8 +56,8 @@ type ComplexityRoot struct {
 	}
 
 	LikeEvent struct {
-		SessionId func(childComplexity int) int
-		Likes     func(childComplexity int) int
+		Session func(childComplexity int) int
+		Likes   func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -221,12 +221,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Like.Session(childComplexity), true
 
-	case "LikeEvent.sessionId":
-		if e.complexity.LikeEvent.SessionId == nil {
+	case "LikeEvent.session":
+		if e.complexity.LikeEvent.Session == nil {
 			break
 		}
 
-		return e.complexity.LikeEvent.SessionId(childComplexity), true
+		return e.complexity.LikeEvent.Session(childComplexity), true
 
 	case "LikeEvent.likes":
 		if e.complexity.LikeEvent.Likes == nil {
@@ -1006,8 +1006,8 @@ func (ec *executionContext) _LikeEvent(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("LikeEvent")
-		case "sessionId":
-			out.Values[i] = ec._LikeEvent_sessionId(ctx, field, obj)
+		case "session":
+			out.Values[i] = ec._LikeEvent_session(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -1028,7 +1028,7 @@ func (ec *executionContext) _LikeEvent(ctx context.Context, sel ast.SelectionSet
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _LikeEvent_sessionId(ctx context.Context, field graphql.CollectedField, obj *LikeEvent) graphql.Marshaler {
+func (ec *executionContext) _LikeEvent_session(ctx context.Context, field graphql.CollectedField, obj *LikeEvent) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "LikeEvent",
 		Args:   nil,
@@ -1036,7 +1036,7 @@ func (ec *executionContext) _LikeEvent_sessionId(ctx context.Context, field grap
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.SessionID, nil
+		return obj.Session, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1044,9 +1044,10 @@ func (ec *executionContext) _LikeEvent_sessionId(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(domains.Session)
 	rctx.Result = res
-	return graphql.MarshalInt(res)
+
+	return ec._Session(ctx, field.Selections, &res)
 }
 
 // nolint: vetshadow
@@ -4830,7 +4831,7 @@ type Like implements Node {
 }
 
 type LikeEvent {
-  sessionId: Int!
+  session: Session!
   likes: Int!
 }
 

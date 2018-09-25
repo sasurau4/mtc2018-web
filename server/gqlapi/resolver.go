@@ -61,7 +61,7 @@ func NewResolver(logger *zap.Logger, spannerClient *spanner.Client) (ResolverRoo
 	observer := newObserver(logger, eventCh, likeSumRepo)
 	go observer.Run()
 
-	listener := newListener(logger, eventCh)
+	listener := newListener(logger, eventCh, sessionRepo)
 	go listener.Run()
 
 	r := &rootResolver{

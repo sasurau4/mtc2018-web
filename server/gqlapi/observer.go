@@ -173,13 +173,15 @@ func (o *observer) observeUpdate() {
 	}
 }
 
-func newListener(logger *zap.Logger, eventCh <-chan likeEvent) *listener {
+func newListener(logger *zap.Logger, eventCh <-chan likeEvent, sessionRepo domains.SessionRepo) *listener {
 	return &listener{
 		logger:  logger.Named("listener"),
 		eventCh: eventCh,
 		done:    make(chan struct{}, 0),
 
 		listeners: make(map[int]map[string]chan LikeEvent),
+
+		sessionRepo: sessionRepo,
 	}
 }
 
@@ -191,6 +193,8 @@ type listener struct {
 	mu sync.RWMutex
 	// sessionID -> id -> channel
 	listeners map[int]map[string]chan LikeEvent
+
+	sessionRepo domains.SessionRepo
 }
 
 func (l *listener) Run() {
@@ -224,9 +228,18 @@ func (l *listener) handleEvent(ev likeEvent) {
 		return
 	}
 
+	ctx := context.Background() // TODO
+	sessions, err := l.sessionRepo.Get(ctx, ev.sessionID)
+	if err != nil {
+		l.logger.Error("can't find session entity",
+			zap.Error(err),
+			zap.Int("sessionID", ev.sessionID),
+		)
+		return
+	}
 	like := LikeEvent{
-		SessionID: ev.sessionID,
-		Likes:     ev.num,
+		Session: *sessions[0],
+		Likes:   ev.num,
 	}
 
 	for _, ch := range sessionListeners {
