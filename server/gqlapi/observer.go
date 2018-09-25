@@ -228,7 +228,8 @@ func (l *listener) handleEvent(ev likeEvent) {
 		return
 	}
 
-	ctx := context.Background() // TODO
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	sessions, err := l.sessionRepo.Get(ctx, ev.sessionID)
 	if err != nil {
 		l.logger.Error("can't find session entity",
