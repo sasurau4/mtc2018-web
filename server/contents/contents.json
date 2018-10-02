@@ -20,6 +20,12 @@
   ],
   "news": [
     {
+      "id": "3",
+      "date": "2018-10-02",
+      "message": "Conference App has been released.",
+      "messageJa": "カンファレンスアプリをリリースしました"
+    },
+    {
       "id": "2",
       "date": "2018-09-28",
       "message": "The list of exhibition booths is now up on our website!",
