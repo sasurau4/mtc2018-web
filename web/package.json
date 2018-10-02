@@ -26,6 +26,7 @@
     "express": "^4.16.3",
     "fontfaceobserver": "^2.0.13",
     "fork-ts-checker-webpack-plugin": "^0.4.9",
+    "google-maps-react": "^2.0.2",
     "graphql-tag": "^2.9.2",
     "i18next": "^11.7.0",
     "i18next-browser-languagedetector": "^2.2.3",
