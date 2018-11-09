@@ -28,6 +28,7 @@ export interface ContentCardFragment {
   tags: string[];
   outline: string;
   outlineJa: string;
+  liked: number;
   slideUrl: string;
   movieUrl: string;
   speakers: ContentCardFragment_speakers[];
