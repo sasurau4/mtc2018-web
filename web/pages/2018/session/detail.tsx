@@ -10,15 +10,23 @@ import Header from '../../../containers/Session/Header';
 import { Button, Section } from '../../../components';
 import { withI18next } from '../../../lib/with-i18next';
 import { NamespacesConsumer } from 'react-i18next';
-import { isJapan } from '../../../utils';
+import { isJapan, generateUUID } from '../../../utils';
 
 import gql from 'graphql-tag';
-import { Query } from 'react-apollo';
+import { Query, Mutation } from 'react-apollo';
+import { FetchResult } from 'apollo-link';
+import { DataProxy } from 'apollo-cache';
 import {
   Session as SessionQuery,
   SessionVariables
 } from '../../../graphql/generated/Session';
 import { SessionFragment } from '../../../graphql/generated/SessionFragment';
+
+import { LIKE_SESSION_MUTATION } from '../../../graphql/mutation';
+import {
+  LikeSession,
+  LikeSessionVariables
+} from '../../../graphql/generated/LikeSession';
 
 export const SESSION_QUERY = gql`
   query Session($sessionId: Int!) {
@@ -38,6 +46,11 @@ export const SESSION_QUERY = gql`
 
 class SessionQueryComponent extends Query<SessionQuery, SessionVariables> {}
 
+class CreateLikeMutationComponent extends Mutation<
+  LikeSession,
+  LikeSessionVariables
+> {}
+
 class Session extends React.Component<WithRouterProps> {
   public render() {
     const sessionId = parseInt(this.props.router!.query!.id as string, 10);
@@ -50,35 +63,47 @@ class Session extends React.Component<WithRouterProps> {
             }
 
             return (
-              <NamespacesConsumer ns={['common']}>
-                {(_, { i18n }) => {
-                  const isJa = isJapan(i18n.language);
-                  const session: SessionFragment = data.session!;
-                  return (
-                    <>
-                      <Head>
-                        <title>
-                          Mercari Tech Conf 2018 -{' '}
-                          {isJa ? session.titleJa : session.title}
-                        </title>
-                      </Head>
-                      <StyledHeader />
-                      <Body>
-                        <Section title="SESSION">
-                          <ContentCard session={data.session!} isJa={isJa} />
-                          <BackButton
-                            type="primary"
-                            size="large"
-                            onClick={this.onClickBackButton}
-                          >
-                            BACK
-                          </BackButton>
-                        </Section>
-                      </Body>
-                    </>
-                  );
-                }}
-              </NamespacesConsumer>
+              <CreateLikeMutationComponent
+                mutation={LIKE_SESSION_MUTATION}
+                update={this.update(sessionId)}
+                variables={{ sessionId, randomId: generateUUID() }}
+              >
+                {createLike => (
+                  <NamespacesConsumer ns={['common']}>
+                    {(_, { i18n }) => {
+                      const isJa = isJapan(i18n.language);
+                      const session: SessionFragment = data.session!;
+                      return (
+                        <>
+                          <Head>
+                            <title>
+                              Mercari Tech Conf 2018 -{' '}
+                              {isJa ? session.titleJa : session.title}
+                            </title>
+                          </Head>
+                          <StyledHeader />
+                          <Body>
+                            <Section title="SESSION">
+                              <ContentCard
+                                session={data.session!}
+                                isJa={isJa}
+                                onClickLikeButton={createLike}
+                              />
+                              <BackButton
+                                type="primary"
+                                size="large"
+                                onClick={this.onClickBackButton}
+                              >
+                                BACK
+                              </BackButton>
+                            </Section>
+                          </Body>
+                        </>
+                      );
+                    }}
+                  </NamespacesConsumer>
+                )}
+              </CreateLikeMutationComponent>
             );
           }}
         </SessionQueryComponent>
@@ -88,6 +113,28 @@ class Session extends React.Component<WithRouterProps> {
 
   private onClickBackButton = () => {
     Router.back();
+  };
+
+  private update = (sessionId: number) => (
+    cache: DataProxy,
+    mutationResult: FetchResult<LikeSession>
+  ) => {
+    // TODO: How to define types?
+    // This is dirty and not good solution.
+    const cachedData = cache.readQuery({
+      query: SESSION_QUERY,
+      variables: { sessionId }
+    })! as { session: SessionQuery };
+
+    const updatedSession = {
+      ...cachedData.session,
+      liked: mutationResult.data!.createLike!.like.session.liked
+    };
+    cache.writeQuery({
+      query: SESSION_QUERY,
+      variables: { sessionId },
+      data: { session: updatedSession }
+    });
   };
 }
 
