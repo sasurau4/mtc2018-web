@@ -50,3 +50,26 @@ export function joinWithBr(texts: string[]): React.ReactNode[] {
 export function isJapan(lang: string): boolean {
   return lang === 'ja-JP' || lang === 'ja';
 }
+
+// https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+export function generateUUID(): string {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return (
+    s4() +
+    s4() +
+    '-' +
+    s4() +
+    '-' +
+    s4() +
+    '-' +
+    s4() +
+    '-' +
+    s4() +
+    s4() +
+    s4()
+  );
+}
