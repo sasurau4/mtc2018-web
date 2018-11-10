@@ -56,7 +56,11 @@ class Session extends React.Component<WithRouterProps> {
     const sessionId = parseInt(this.props.router!.query!.id as string, 10);
     return (
       <Default>
-        <SessionQueryComponent query={SESSION_QUERY} variables={{ sessionId }}>
+        <SessionQueryComponent
+          query={SESSION_QUERY}
+          variables={{ sessionId }}
+          pollInterval={1000}
+        >
           {({ data, error, loading }) => {
             if (error || loading || !data || !data.session) {
               return null;
