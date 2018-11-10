@@ -22,6 +22,7 @@ export const CONTENT_CARD_FRAGMENT = gql`
     tags
     outline
     outlineJa
+    liked
     slideUrl
     movieUrl
     speakers {
@@ -46,11 +47,12 @@ const getTip = (type: Content['type']) => {
 interface Props {
   session: ContentCardFragment;
   isJa: boolean;
+  onClickLikeButton: () => void;
 }
 
 class ContentCard extends React.PureComponent<Props> {
   public render() {
-    const { session, isJa, ...props } = this.props;
+    const { session, isJa, onClickLikeButton, ...props } = this.props;
     const startTime = moment(session.startTime).format('HH:mm');
     const endTime = moment(session.endTime).format('HH:mm');
     return (
@@ -95,6 +97,10 @@ class ContentCard extends React.PureComponent<Props> {
               <LinkIcon src="/2018/static/images/icn_movie.svg" alt="movie" />
               <Text level="display1">Movie</Text>
             </LinkButton>
+            <LikeButton type="primary" size="small" onClick={onClickLikeButton}>
+              <LinkIcon src="/2018/static/images/icn_favorite.svg" alt="like" />
+              <LikeText level="display1">{session.liked}</LikeText>
+            </LikeButton>
           </Links>
         </ContentInfo>
         <div>
@@ -156,6 +162,15 @@ const LinkButton = styled(ButtonLink)`
   @media screen and (max-width: 767px) {
     margin-bottom: 10px;
   }
+`;
+
+const LikeButton = styled(Button)`
+  text-decoration: none;
+  justify-content: center;
+`;
+
+const LikeText = styled(Text)`
+  color: ${colors.yuki};
 `;
 
 const LinkIcon = styled.img`
